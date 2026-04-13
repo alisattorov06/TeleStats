@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TeleStats - Telegram Analytics Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #f8fafc; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .sidebar-item:hover { background: rgba(59, 130, 246, 0.1); border-left: 4px solid #3b82f6; }
+        .sidebar-item.active { background: rgba(59, 130, 246, 0.2); border-left: 4px solid #3b82f6; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+    </style>
+</head>
+<body class="flex min-h-screen overflow-hidden">
+
+    <!-- Auth Modal -->
+    <div id="auth-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80">
+        <div class="glass p-8 rounded-2xl w-full max-w-md">
+            <h2 class="text-2xl font-bold mb-6 text-center">Dashboard Access</h2>
+            <div class="space-y-4">
+                <input type="password" id="admin-token" placeholder="Enter 15-char Token" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-blue-500 outline-none">
+                <button onclick="authenticate()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition-all">Login</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="w-72 glass border-r border-slate-800 flex flex-col hidden" id="sidebar">
+        <div class="p-6">
+            <div class="flex items-center gap-3 text-2xl font-bold text-blue-500">
+                <i class="fa-solid fa-chart-line"></i>
+                <span>TeleStats</span>
+            </div>
+        </div>
+        
+        <nav class="flex-1 mt-6">
+            <div class="px-4 mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">Navigation</div>
+            <a href="#" class="sidebar-item active flex items-center gap-3 px-6 py-4 text-slate-300 transition-all">
+                <i class="fa-solid fa-house"></i> Overview
+            </a>
+            <div class="px-4 mt-6 mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">Your Chats</div>
+            <div id="chat-list" class="space-y-1">
+                <!-- Chats populated here -->
+            </div>
+        </nav>
+
+        <div class="p-4 border-t border-slate-800">
+            <div class="flex items-center gap-3 text-sm text-slate-400">
+                <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white">
+                    <i class="fa-solid fa-user-tie"></i>
+                </div>
+                <div>
+                    <div class="font-medium text-slate-200">Admin</div>
+                    <div class="text-xs">Professional Plan</div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-screen overflow-y-auto hidden" id="main-content">
+        <!-- Header -->
+        <header class="p-6 flex items-center justify-between glass sticky top-0 z-10 border-b border-slate-800">
+            <h1 class="text-xl font-semibold" id="current-chat-title">Select a Chat</h1>
+            <div class="flex items-center gap-4">
+                <div class="relative">
+                    <span class="absolute top-0 right-0 w-2 h-2 bg-green-500 rounded-full border-2 border-slate-900"></span>
+                    <i class="fa-solid fa-bell text-slate-400 text-xl cursor-pointer"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dynamic Content -->
+        <div class="p-8 space-y-8">
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="glass p-6 rounded-2xl">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="text-slate-400 text-sm">Total Members</div>
+                            <div class="text-2xl font-bold mt-1" id="stat-members">0</div>
+                        </div>
+                        <div class="p-3 bg-blue-500 bg-opacity-10 text-blue-500 rounded-xl">
+                            <i class="fa-solid fa-users"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass p-6 rounded-2xl">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="text-slate-400 text-sm">Daily Growth</div>
+                            <div class="text-2xl font-bold mt-1 text-green-500" id="stat-growth">+0%</div>
+                        </div>
+                        <div class="p-3 bg-green-500 bg-opacity-10 text-green-500 rounded-xl">
+                            <i class="fa-solid fa-arrow-trend-up"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass p-6 rounded-2xl">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="text-slate-400 text-sm">Avg Views</div>
+                            <div class="text-2xl font-bold mt-1" id="stat-views">0</div>
+                        </div>
+                        <div class="p-3 bg-purple-500 bg-opacity-10 text-purple-500 rounded-xl">
+                            <i class="fa-solid fa-eye"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass p-6 rounded-2xl">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="text-slate-400 text-sm">Last Post</div>
+                            <div class="text-2xl font-bold mt-1 text-sm" id="stat-last-post">Today</div>
+                        </div>
+                        <div class="p-3 bg-orange-500 bg-opacity-10 text-orange-500 rounded-xl">
+                            <i class="fa-solid fa-clock"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="glass p-6 rounded-3xl">
+                    <h3 class="text-lg font-semibold mb-6">Audience Metrics</h3>
+                    <canvas id="growthChart" height="200"></canvas>
+                </div>
+                <div class="glass p-6 rounded-3xl">
+                    <h3 class="text-lg font-semibold mb-6">Growth Forecast (Next 7 Days)</h3>
+                    <canvas id="forecastChart" height="200"></canvas>
+                </div>
+            </div>
+
+            <!-- Bottom Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-10">
+                <!-- Top Adders (For Groups) -->
+                <div class="lg:col-span-2 glass p-6 rounded-3xl min-h-[300px]" id="adders-card">
+                    <h3 class="text-lg font-semibold mb-6">Top Members Adjoined</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="text-left text-slate-500 text-sm">
+                                    <th class="pb-4">Member ID</th>
+                                    <th class="pb-4">Users Added</th>
+                                    <th class="pb-4">Efficiency</th>
+                                </tr>
+                            </thead>
+                            <tbody id="top-adders-body">
+                                <!-- Data populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Bot Settings -->
+                <div class="glass p-6 rounded-3xl" id="settings-card">
+                    <h3 class="text-lg font-semibold mb-6">Channel Settings</h3>
+                    <div class="space-y-6">
+                        <div class="flex items-center justify-between p-4 rounded-2xl bg-slate-800 bg-opacity-50">
+                            <div>
+                                <div class="font-medium">Auto-Clean Messages</div>
+                                <div class="text-xs text-slate-400">Delete join/leave service messages</div>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="cleanup-toggle" onchange="toggleCleanup()" class="sr-only peer">
+                                <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
