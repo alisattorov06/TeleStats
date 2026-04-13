@@ -17,7 +17,7 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 ADMIN_TOKEN = os.getenv("ADMIN_TOKEN")
-API_URL = "http://localhost:8000/api/notify"
+API_URL = "https://telestats.onrender.com/api/notify"
 
 async def notify_dashboard(chat_id, members_count, posts_count):
     try:
