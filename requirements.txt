@@ -1,9 +1,9 @@
 fastapi
-uvicorn
+uvicorn[standard]
 aiogram
 sqlalchemy
 aiosqlite
 python-dotenv
 pydantic-settings
-requests
 httpx
+websockets
